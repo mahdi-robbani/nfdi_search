@@ -3,11 +3,17 @@ const request = require('request');
 const cors = require('cors');
 const app = express();
 
+const SERVICE_TO_URL = {
+    "straininfo": "https://hub.dsmz.de/api/search",
+    "service2": "https://example.com"
+}
+
 app.use(cors());
 
-app.get('/proxy/:query', (req, res) => {
+app.get('/proxy/:service/:query', (req, res) => {
+    const service = req.params.service;
     const query = req.params.query;
-    const apiUrl = `https://hub.dsmz.de/api/search/${query}`;
+    const apiUrl = `${SERVICE_TO_URL[service]}/${query}`;
     request(apiUrl).pipe(res);
 });
 
