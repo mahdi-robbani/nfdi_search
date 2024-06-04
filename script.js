@@ -1,3 +1,8 @@
+const SERVICE_TO_PROXY_URL = {
+    straininfo: `http://localhost:3000/proxy/straininfo`,
+    service2: `http://localhost:3000/proxy/straininfo`,
+}
+
 document.getElementById('search-button').addEventListener('click', function() {
     const query = document.getElementById('search-input').value;
     const service = document.getElementById('service-select').value;
@@ -7,21 +12,24 @@ document.getElementById('search-button').addEventListener('click', function() {
 });
 
 async function search(query, service) {
-    let urls = [];
-    if (service === 'all' || service === 'straininfo') {
-        urls.push(`http://localhost:3000/proxy/straininfo/${encodeURIComponent(query)}`);
-    }
-    if (service === 'all' || service === 'service2') {
-        urls.push(`http://localhost:3000/proxy/service2/${encodeURIComponent(query)}`);
+    let urls = {};
+
+    if (service === 'all') {
+        for (const [s, url] of Object.entries(SERVICE_TO_PROXY_URL)) {
+            urls[s] = (`${url}/${encodeURIComponent(query)}`);
+        }
+    } else {
+        urls[service] = (`${SERVICE_TO_PROXY_URL[service]}/${encodeURIComponent(query)}`);
     }
 
     try {
         let results = [];
-        for (const url of urls) {
+        console.log(urls)
+        for (const [s, url] of Object.entries(urls)) {
             const response = await fetch(url);
             const data = await response.json();
             // console.log(data);
-            results = results.concat(preprocessResults(data, service));
+            results = results.concat(preprocessResults(data, s));
             // console.log(results);
         }
         displayResults(results);
@@ -32,7 +40,8 @@ async function search(query, service) {
 
 function preprocessResults(data, service) {
     if (service === 'straininfo' || service === 'all') {
-        return data.result.map(result => ({
+        // TODO: filter for straininfo results only
+        return data.result.slice(0, 3).map(result => ({
             name: result.name,
             term: result.term,
             type: result.type,
@@ -41,12 +50,13 @@ function preprocessResults(data, service) {
         }));
     } else if (service === 'service2' || service === 'all') {
         // Example preprocessing for Service 2
-        return data.map(result => ({
-            name: result.otherName,
-            term: result.otherTerm,
-            type: result.otherType,
-            link: result.otherLink,
-            source: result.otherSource
+        return data.result.slice(0, 2).map(result => ({
+            // TODO: replace with fields in the other service
+            name: result.name,
+            term: result.term,
+            type: result.type,
+            link: result.link,
+            source: result.source
         }));
     }
     return [];
