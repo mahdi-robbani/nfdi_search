@@ -1,7 +1,12 @@
 const SERVICE_TO_PROXY_URL = {
     straininfo: `http://localhost:3000/proxy/straininfo`,
-    service2: `http://localhost:3000/proxy/straininfo`,
-}
+    service2: `http://localhost:3000/proxy/service2`, // TODO: Change to new service
+};
+
+let currentPage = 1;
+const resultsPerPage = 10;
+let paginatedResults = [];
+let totalHits = {};
 
 document.getElementById('search-button').addEventListener('click', function() {
     const query = document.getElementById('search-input').value;
@@ -23,50 +28,72 @@ async function search(query, service) {
     }
 
     try {
-        let results = [];
-        console.log(urls)
+        let allResults = [];
+        totalHits = {};
         for (const [s, url] of Object.entries(urls)) {
             const response = await fetch(url);
             const data = await response.json();
-            // console.log(data);
-            results = results.concat(preprocessResults(data, s));
-            // console.log(results);
+            const { results, count } = preprocessResults(data, s);
+            allResults = allResults.concat(results);
+            totalHits[s] = count;
         }
-        displayResults(results);
+        paginateResults(allResults);
+        displayResults();
     } catch (error) {
         console.error('Error fetching the results:', error);
     }
 }
 
 function preprocessResults(data, service) {
-    if (service === 'straininfo' || service === 'all') {
-        // TODO: filter for straininfo results only
-        return data.result.slice(0, 3).map(result => ({
-            name: result.name,
-            term: result.term,
-            type: result.type,
-            link: result.link,
-            source: result.source
-        }));
-    } else if (service === 'service2' || service === 'all') {
-        // Example preprocessing for Service 2
-        return data.result.slice(0, 2).map(result => ({
-            // TODO: replace with fields in the other service
-            name: result.name,
-            term: result.term,
-            type: result.type,
-            link: result.link,
-            source: result.source
-        }));
+    let results = [];
+    if (data.result) {
+        if (service === 'straininfo' || service === 'all') {
+            results = data.result.slice(12, 15).map(result => ({
+                name: result.name,
+                term: result.term,
+                type: result.type,
+                link: result.link,
+                source: result.source
+            }));
+        } else if (service === 'service2' || service === 'all') {
+            // Example preprocessing for Service 2
+            results = data.result.slice(0, 3).map(result => ({
+                // TODO: replace with fields in the other service
+                name: result.name,
+                term: result.term,
+                type: result.type,
+                link: result.link,
+                source: result.source
+            }));
+        }
     }
-    return [];
+    return { results, count: results.length };
 }
 
-function displayResults(results) {
+function paginateResults(allResults) {
+    paginatedResults = [];
+    for (let i = 0; i < allResults.length; i += resultsPerPage) {
+        paginatedResults.push(allResults.slice(i, i + resultsPerPage));
+    }
+    currentPage = 1;
+}
+
+function displayResults() {
     const resultsContainer = document.getElementById('results');
+    const paginationContainer = document.getElementById('pagination');
     resultsContainer.innerHTML = '';
-    if (results.length > 0) {
-        results.forEach(result => {
+    paginationContainer.innerHTML = '';
+
+    // Display total hits
+    for (const [service, count] of Object.entries(totalHits)) {
+        const countElement = document.createElement('p');
+        countElement.textContent = `${service}: ${count} hits`;
+        resultsContainer.appendChild(countElement);
+    }
+
+    // Display paginated results
+    if (paginatedResults.length > 0 && paginatedResults[currentPage - 1]) {
+        paginatedResults[currentPage - 1].forEach(result => {
             const resultElement = document.createElement('div');
             resultElement.className = 'card mb-3';
             resultElement.innerHTML = `
@@ -79,6 +106,75 @@ function displayResults(results) {
             `;
             resultsContainer.appendChild(resultElement);
         });
+
+        // Add pagination controls
+        const totalPages = paginatedResults.length;
+
+        if (currentPage > 1) {
+            const firstButton = document.createElement('button');
+            firstButton.className = 'btn btn-secondary me-2';
+            firstButton.textContent = 'First';
+            firstButton.addEventListener('click', () => {
+                currentPage = 1;
+                displayResults();
+            });
+            paginationContainer.appendChild(firstButton);
+
+            const prevButton = document.createElement('button');
+            prevButton.className = 'btn btn-secondary me-2';
+            prevButton.textContent = 'Previous';
+            prevButton.addEventListener('click', () => {
+                currentPage--;
+                displayResults();
+            });
+            paginationContainer.appendChild(prevButton);
+        }
+
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+
+        if (startPage > 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '...';
+            paginationContainer.appendChild(ellipsis);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageButton = document.createElement('button');
+            pageButton.className = `btn ${i === currentPage ? 'btn-primary' : 'btn-secondary'} me-2`;
+            pageButton.textContent = i;
+            pageButton.addEventListener('click', () => {
+                currentPage = i;
+                displayResults();
+            });
+            paginationContainer.appendChild(pageButton);
+        }
+
+        if (endPage < totalPages) {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '...';
+            paginationContainer.appendChild(ellipsis);
+        }
+
+        if (currentPage < totalPages) {
+            const nextButton = document.createElement('button');
+            nextButton.className = 'btn btn-secondary me-2';
+            nextButton.textContent = 'Next';
+            nextButton.addEventListener('click', () => {
+                currentPage++;
+                displayResults();
+            });
+            paginationContainer.appendChild(nextButton);
+
+            const lastButton = document.createElement('button');
+            lastButton.className = 'btn btn-secondary';
+            lastButton.textContent = 'Last';
+            lastButton.addEventListener('click', () => {
+                currentPage = totalPages;
+                displayResults();
+            });
+            paginationContainer.appendChild(lastButton);
+        }
     } else {
         resultsContainer.innerHTML = '<p>No results found</p>';
     }
