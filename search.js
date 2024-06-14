@@ -46,26 +46,24 @@ async function search(query, service) {
 
 function preprocessResults(data, service) {
     let results = [];
-    if (data.result) {
-        if (service === 'straininfo' || service === 'all') {
-            results = data.result.slice(12, 15).map(result => ({
-                name: result.name,
-                term: result.term,
-                type: result.type,
-                link: result.link,
-                source: result.source
-            }));
-        } else if (service === 'service2' || service === 'all') {
-            // Example preprocessing for Service 2
-            results = data.result.slice(0, 3).map(result => ({
-                // TODO: replace with fields in the other service
-                name: result.name,
-                term: result.term,
-                type: result.type,
-                link: result.link,
-                source: result.source
-            }));
-        }
+    if (service === 'straininfo') {
+        results = data.result.slice(12, 15).map(result => ({
+            name: result.name,
+            term: result.term,
+            type: result.type,
+            link: result.link,
+            source: result.source
+        }));
+    } else if (service === 'service2') {
+        // Example preprocessing for Service 2
+        results = data.result.slice(0, 10).map(result => ({
+            // TODO: replace with fields in the other service
+            name: result.name,
+            term: result.term,
+            type: result.type,
+            link: result.link,
+            source: result.source
+        }));
     }
     return { results, count: results.length };
 }
