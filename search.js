@@ -52,7 +52,7 @@ function preprocessResults(data, service) {
             term: result.term,
             type: result.type,
             link: result.link,
-            source: result.source
+            source: service
         }));
     } else if (service === 'service2') {
         // Example preprocessing for Service 2
@@ -62,7 +62,7 @@ function preprocessResults(data, service) {
             term: result.term,
             type: result.type,
             link: result.link,
-            source: result.source
+            source: service
         }));
     }
     return { results, count: results.length };
@@ -95,12 +95,15 @@ function displayResults() {
             const resultElement = document.createElement('div');
             resultElement.className = 'card mb-3';
             resultElement.innerHTML = `
-                <div class="card-body">
-                    <h5 class="card-title">${result.name}</h5>
-                    <p class="card-text">${result.term} (${result.type})</p>
-                    <p class="card-text"><small class="text-muted">Source: ${result.source}</small></p>
-                    <a href="${result.link}" class="btn btn-primary" target="_blank">Go to Link</a>
+            <div class="card">
+                <div class="card-header">
+                    Source: ${result.source}
                 </div>
+                <div class="card-body">
+                    <h5 class="card-title"><a href="${result.link}">${result.name}</a></h5>
+                    <p class="card-text">Term:${result.term} Type:result.type}  </p>
+                </div>
+            </div>
             `;
             resultsContainer.appendChild(resultElement);
         });
