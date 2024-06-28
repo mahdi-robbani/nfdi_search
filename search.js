@@ -47,7 +47,9 @@ async function search(query, service) {
 function preprocessResults(data, service) {
     let results = [];
     if (service === 'straininfo') {
-        results = data.result.slice(12, 15).map(result => ({
+        results = data.result
+        .filter(result => result.source === 'straininfo')
+        .map(result => ({
             name: result.name,
             term: result.term,
             type: result.type,
@@ -137,6 +139,7 @@ function displayResults() {
         if (startPage > 1) {
             const ellipsis = document.createElement('span');
             ellipsis.textContent = '...';
+            ellipsis.className = 'me-2';
             paginationContainer.appendChild(ellipsis);
         }
 
@@ -154,6 +157,7 @@ function displayResults() {
         if (endPage < totalPages) {
             const ellipsis = document.createElement('span');
             ellipsis.textContent = '...';
+            ellipsis.className = 'me-2';
             paginationContainer.appendChild(ellipsis);
         }
 
