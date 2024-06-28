@@ -5,7 +5,7 @@ const app = express();
 
 const SERVICE_TO_URL = {
     "straininfo": "https://hub.dsmz.de/api/search",
-    "service2": "https://example.com"
+    "service2": "https://hub.dsmz.de/api/search"
 }
 
 app.use(cors());
