@@ -13,13 +13,36 @@ let filteredResults = [];
 let selectedService = 'all';
 
 document.getElementById('search-button').addEventListener('click', function() {
-    const query = document.getElementById('search-input').value;
-    const service = document.getElementById('service-select').value;
-    if (query) {
-        search(query, service);
+    handleSearch();
+});
+
+document.getElementById('search-input').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        handleSearch();
     }
 });
 
+function handleSearch() {
+    const query = document.getElementById('search-input').value;
+    const service = document.getElementById('service-select').value;
+    
+    if (query.length < 3) {
+        displayWarningBanner();
+    } else {
+        hideWarningBanner();
+        search(query, service);
+    }
+}
+
+function displayWarningBanner() {
+    const warningBanner = document.getElementById('warning-banner');
+    warningBanner.classList.remove('d-none');
+}
+
+function hideWarningBanner() {
+    const warningBanner = document.getElementById('warning-banner');
+    warningBanner.classList.add('d-none');
+}
 
 // Main function
 async function search(query, service) {
@@ -39,6 +62,7 @@ async function search(query, service) {
         for (const [s, url] of Object.entries(urls)) {
             const response = await fetch(url);
             const data = await response.json();
+            console.log(data);
             const { results, count } = preprocessResults(data, s);
             allResults = allResults.concat(results);
             totalHits[s] = count;
