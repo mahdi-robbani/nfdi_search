@@ -62,15 +62,35 @@ async function search(query, service) {
         for (const [s, url] of Object.entries(urls)) {
             const response = await fetch(url);
             const data = await response.json();
-            console.log(data);
-            const { results, count } = preprocessResults(data, s);
-            allResults = allResults.concat(results);
-            totalHits[s] = count;
+
+            // Check if data is empty
+            if (Object.keys(data.result).length === 0) {
+                console.log(`No results found for service: ${s}`);
+                totalHits[s] = 0;
+                continue; // Skip to the next iteration if the object is empty
+            } else {
+                const { results, count } = preprocessResults(data, s);
+                allResults = allResults.concat(results);
+                totalHits[s] = count;
+            }
         }
+        if (allResults.length === 0) {
+            // reset all text
+            const resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = '<p>No results found</p>';
+
+            const paginationContainer = document.getElementById('pagination');
+            paginationContainer.innerHTML = '';
+
+            const filterButtonsContainer = document.getElementById('filter-buttons');
+            filterButtonsContainer.innerHTML = '';
+        }
+    else {
         filteredResults = allResults;
         paginateResults(allResults);
         displayFilterButtons();
         displayResults();
+    }
     } catch (error) {
         console.error('Error fetching the results:', error);
     }
