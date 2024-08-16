@@ -1,6 +1,7 @@
 const SERVICE_TO_PROXY_URL = {
-    straininfo: `http://localhost:3000/proxy/straininfo`,
-    service2: `http://localhost:3000/proxy/service2`, // TODO: Change to new service
+    //straininfo: `http://localhost:3000/proxy/straininfo`,
+    straininfo: `https://hub.dsmz.de/api/search`,
+    // service2: `http://localhost:3000/proxy/service2`, // TODO: Change to new service
 };
 
 let currentPage = 1;
@@ -19,6 +20,8 @@ document.getElementById('search-button').addEventListener('click', function() {
     }
 });
 
+
+// Main function
 async function search(query, service) {
     let urls = {};
 
@@ -64,7 +67,7 @@ function preprocessResults(data, service) {
             }));
         } else if (service === 'service2') {
             // Example preprocessing for Service 2
-            results = data.result.slice(0, 10).map(result => ({
+            results = data.result.map(result => ({
                 // TODO: replace with fields in the other service
                 name: result.name,
                 term: result.term,
